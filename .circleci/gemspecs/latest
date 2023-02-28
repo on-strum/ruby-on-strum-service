@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require_relative 'lib/ruby_gem_name/version'
+require_relative 'lib/on_strum/service/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'ruby_gem_name'
-  spec.version       = RubyGemName::VERSION
-  spec.authors       = ['FirstName SecondName']
+  spec.name          = 'on_strum-service'
+  spec.version       = OnStrum::Service::VERSION
+  spec.authors       = ['Serhiy Nazarov']
   spec.email         = %w[admin@on-strum.org]
-  spec.summary       = %(ruby_gem_name)
-  spec.description   = %(ruby_gem_name description)
-  spec.homepage      = 'https://github.com/on-strum/ruby-gem'
+  spec.summary       = %(on_strum-service)
+  spec.description   = %(Abstract class for service object scaffolding)
+  spec.homepage      = 'https://github.com/on-strum/ruby-on-strum-service'
   spec.license       = 'MIT'
 
   spec.required_ruby_version = '>= 2.5.0'
@@ -18,12 +18,13 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency 'bundler-audit', '~> 0.9.1'
   spec.add_development_dependency 'fasterer', '~> 0.10.0'
+  spec.add_development_dependency 'ffaker', '~> 2.21'
   spec.add_development_dependency 'pry-byebug', '~> 3.10', '>= 3.10.1'
   spec.add_development_dependency 'rake', '~> 13.0', '>= 13.0.6'
-  spec.add_development_dependency 'reek', '~> 6.1', '>= 6.1.3'
+  spec.add_development_dependency 'reek', '~> 6.1', '>= 6.1.4'
   spec.add_development_dependency 'rspec', '~> 3.12'
-  spec.add_development_dependency 'rubocop', '~> 1.42'
-  spec.add_development_dependency 'rubocop-performance', '~> 1.15', '>= 1.15.2'
-  spec.add_development_dependency 'rubocop-rspec', '~> 2.16'
+  spec.add_development_dependency 'rubocop', '~> 1.46'
+  spec.add_development_dependency 'rubocop-performance', '~> 1.16'
+  spec.add_development_dependency 'rubocop-rspec', '~> 2.18', '>= 2.18.1'
   spec.add_development_dependency 'simplecov', '~> 0.22.0'
 end
