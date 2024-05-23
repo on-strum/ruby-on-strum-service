@@ -3,3 +3,22 @@
 detectors:
   IrresponsibleModule:
     enabled: false
+
+  ModuleInitialize:
+    enabled: false
+
+  BooleanParameter:
+    exclude:
+      - OnStrum::Service::InstanceMethods#respond_to_missing?
+
+  FeatureEnvy:
+    exclude:
+      - OnStrum::Service::InstanceMethods#default_pro
+
+  TooManyStatements:
+    exclude:
+      - OnStrum::Service::InstanceMethods#initialize
+      - OnStrum::Service::InstanceMethods#execute
+
+exclude_paths:
+  - spec/support/helpers
