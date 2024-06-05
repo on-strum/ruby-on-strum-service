@@ -65,8 +65,6 @@ module OnStrum
 
       attr_accessor :inputs, :inputs_snapshot, :errors, :outputs, :handlers
 
-      def audit; end
-
       def input
         inputs[OnStrum::Service::InstanceMethods::DEFAULT_CTX_KEY]
       end

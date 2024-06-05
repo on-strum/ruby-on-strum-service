@@ -64,6 +64,19 @@ RSpec.describe OnStrum::Service do
       expect(call_service(service_class, { a: 1 })).to eq(b: [:field_must_exist])
     end
 
+    it 'audit' do
+      service_class = ::Class.new do
+        include OnStrum::Service # rubocop:disable RSpec/DescribedClass
+        define_method(:call) { |_| audit }
+
+        define_method(:audit) do
+          required(:b)
+        end
+      end
+
+      expect(call_service(service_class, { a: 1 })).to eq(b: [:field_must_exist])
+    end
+
     it 'throw exception' do
       service_class = ::Class.new do
         include OnStrum::Service # rubocop:disable RSpec/DescribedClass
