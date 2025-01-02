@@ -170,7 +170,7 @@ jobs:
 
       - add_ssh_keys:
           fingerprints:
-            - "27:e2:a7:86:08:b7:f1:f4:28:b2:cd:6d:ac:f3:02:b8"
+            - "SHA256:faZXHWFC1KJpyvcMKQ4/MBQRjd80ewMKLmU8MsWOVpM"
 
       - run:
           name: Publishing new release
