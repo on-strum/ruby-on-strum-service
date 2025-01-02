@@ -20,5 +20,11 @@ detectors:
       - OnStrum::Service::InstanceMethods#initialize
       - OnStrum::Service::InstanceMethods#execute
 
+  UtilityFunction:
+    exclude:
+      - OnStrum::Service::InstanceMethods#method_s_sym
+      - OnStrum::Service::InstanceMethods#from_input?
+      - OnStrum::Service::InstanceMethods#from_inputs?
+
 exclude_paths:
   - spec/support/helpers

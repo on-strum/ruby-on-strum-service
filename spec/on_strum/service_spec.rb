@@ -490,4 +490,92 @@ RSpec.describe OnStrum::Service do
       end
     end
   end
+
+  context 'method_missing behavior' do
+    context 'when key exists in input and args is empty' do
+      subject(:service_class) do
+        ::Class.new do
+          include OnStrum::Service # rubocop:disable RSpec/DescribedClass
+          define_method(:call) do
+            output(test_key)
+          end
+        end
+      end
+
+      it 'returns value from input when input is hash' do
+        service_class.call({ test_key: 'from_input' }) do |monad|
+          monad.success do |result|
+            expect(result).to eq('from_input')
+          end
+        end
+      end
+    end
+
+    context 'when key exists in inputs' do
+      subject(:service_class) do
+        ::Class.new do
+          include OnStrum::Service # rubocop:disable RSpec/DescribedClass
+          define_method(:call) do
+            output(test_key)
+          end
+        end
+      end
+
+      it 'returns value from inputs when not found in input or args not empty' do
+        service_class.call({}, test_key: 'from_inputs') do |monad|
+          monad.success do |result|
+            expect(result).to eq('from_inputs')
+          end
+        end
+      end
+
+      it 'returns value from inputs when input is not a hash' do
+        service_class.call([], test_key: 'from_inputs') do |monad|
+          monad.success do |result|
+            expect(result).to eq('from_inputs')
+          end
+        end
+      end
+    end
+
+    context 'when method does not exist anywhere' do
+      subject(:service_class) do
+        ::Class.new do
+          include OnStrum::Service # rubocop:disable RSpec/DescribedClass
+          define_method(:call) do
+            non_existent_method
+          end
+        end
+      end
+
+      it 'raises NameError through super' do
+        expect { service_class.call({}) }.to raise_error(::NameError)
+      end
+    end
+
+    context 'respond_to? behavior matches method_missing' do
+      let(:service_class) do
+        ::Class.new do
+          include OnStrum::Service # rubocop:disable RSpec/DescribedClass
+          def call; end
+        end
+      end
+
+      context 'when args are not empty' do
+        subject(:service) { service_class.new({ input_key: 'value' }, inputs_key: 'value') }
+
+        it do
+          expect(service.respond_to?(:input_key)).to be(false)
+          expect(service.respond_to?(:inputs_key)).to be(true)
+          expect(service.respond_to?(:non_existent)).to be(false)
+        end
+      end
+
+      context 'when args are empty' do
+        subject(:service) { service_class.new({ input_key: 'value' }) }
+
+        it { expect(service.respond_to?(:input_key)).to be(true) }
+      end
+    end
+  end
 end
