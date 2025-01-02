@@ -70,6 +70,7 @@ gem install on_strum-service
 ```ruby
 require 'on_strum/service'
 
+# Recommended approach - inheritance
 class MyService < OnStrum::Service
   def call
     # Your service logic here
@@ -77,12 +78,25 @@ class MyService < OnStrum::Service
   end
 end
 
+# Alternative approach using include (not recommended)
+class AnotherService
+  include OnStrum::Service
+
+  def call
+    # Your service logic here
+    output(result)
+  end
+end
+
 # Call the service
 MyService.call(input_hash) do |result|
-  result.success { |value| puts 'Success: #{value}' }
-  result.failure { |errors| puts 'Errors: #{errors}' }
+  result.success { |value| puts "Success: #{value}" }
+  result.failure { |errors| puts "Errors: #{errors}" }
 end
 ```
+
+> [!IMPORTANT]  
+> While it's possible to use the service module through inclusion (`include OnStrum::Service`), we strongly recommend using inheritance (`< OnStrum::Service`) for better code clarity and maintainability. This approach provides a clearer indication of the service object pattern implementation and makes the code more explicit.
 
 ### Error Handling
 
@@ -91,11 +105,11 @@ class ValidationService < OnStrum::Service
   def call
     # Add single error
     add_error(:email, :invalid)
-    
+
     # Add multiple errors for one key
     add_error(:password, :too_short)
     add_error(:password, :no_special_chars)
-    
+
     # Add multiple errors at once
     # You can use bang (!) methods to immediately exit the service with errors
     add_errors!(
@@ -114,31 +128,16 @@ class UserService < OnStrum::Service
     # Validate required fields
     required!(:email)    # Will exit immediately if email is missing
     required(:password)  # Will add error but continue execution
-    
+
     # Your logic here
   end
-  
+
   # You can also use audit method for validations
   def audit
     required(:email)
     required(:password)
   end
 end
-```
-
-### Context and Arguments
-
-```ruby
-class CalculatorService < OnStrum::Service
-  def call
-    # Access input parameters directly as methods
-    result = first_number + second_number
-    output(result)
-  end
-end
-
-# Call with context hash and additional arguments
-CalculatorService.call({ first_number: 40 }, second_number: 2)
 ```
 
 ### Hooks
@@ -169,10 +168,10 @@ class DataService < OnStrum::Service
   def call
     # Slice specific keys from input
     sliced(:name, :email)  # Reduces input to only these keys
-    
+
     # Check if any of specified keys exist
     any(:email, :phone)    # Ensures at least one exists
-    
+
     # Process array of hashes
     sliced_list(:name, :email) # Slices each hash in array
   end
@@ -183,6 +182,7 @@ class ArrayProcessor < OnStrum::Service
   def call
     # This will fail if input is not an array
     sliced_list(:name, :email)
+    output(input)
   end
 end
 
@@ -217,20 +217,80 @@ end
 
 ### Method Missing Support
 
-The service automatically handles method missing to allow direct access to input parameters:
+The service automatically handles method missing to allow direct access to both input hash values and keyword arguments:
 
 ```ruby
 class GreetingService < OnStrum::Service
   def call
-    # 'name' will be looked up from input hash or arguments
+    # 'name' will be looked up from:
+    # 1. Input hash (if it's a Hash)
+    # 2. Keyword arguments
+    # Supports both string and symbol keys
     output("Hello, #{name}!")
   end
 end
 
+# Using input hash
 GreetingService.call({ name: 'John' })
-# or
+
+# Using keyword arguments
 GreetingService.call({}, name: 'John')
+
+# Mixed usage (keyword args take precedence)
+GreetingService.call({ name: 'John' }, name: 'Jane')  # Will use 'Jane'
+
+# Supports both string and symbol keys
+GreetingService.call({ 'name' => 'John' })  # Works
+GreetingService.call({ :name => 'John' })   # Works too
 ```
+
+The method missing implementation provides a flexible way to access input parameters:
+
+- Checks both string and symbol versions of the key
+- Looks up values in both the input hash and keyword arguments
+- Uses a default proc to handle string/symbol key interchangeability
+- Returns `nil` for non-existent keys instead of raising method missing errors
+
+### Output Handling
+
+The service provides flexible output handling through the `output` method:
+
+```ruby
+class UserService < OnStrum::Service
+  def call
+    # Basic usage - single output
+    output(user)  # Same as output(:default, user)
+
+    # Named outputs
+    output(:user, user)
+    output(:stats, stats)
+
+    # Last output is returned by default
+    output(:final_result, "Done!")
+  end
+end
+
+# Handle different outputs in the caller
+UserService.call(data) do |result|
+  # Handle default output
+  result.success { |value| puts "Default: #{value}" }
+
+  # Handle specific named output
+  result.success(:user) { |user| puts "User: #{user}" }
+  result.success(:stats) { |stats| puts "Stats: #{stats}" }
+
+  # Handle failures
+  result.failure { |errors| puts "Errors: #{errors}" }
+end
+```
+
+The output system features:
+
+- Default output using single argument: `output(value)`
+- Named outputs using key-value pairs: `output(:key, value)`
+- Multiple outputs can be set during service execution
+- Specific outputs can be handled with corresponding success handlers
+- The last output (or default output) is returned if no specific handler matches
 
 ## Contributing
 

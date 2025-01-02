@@ -46,19 +46,17 @@ module OnStrum
       end
 
       def method_missing(method_name, *_args, &_block)
-        if args.empty? && input_hash? && (input_method_name = input[method_name]) # looking firstly on symbol-key, and after on string-key
-          input_method_name
+        if from_input?(method_name)
+          input[method_name]
+        elsif from_inputs?(method_name)
+          inputs[method_name]
         else
-          inputs[method_name] || super
+          super
         end
       end
 
       def respond_to_missing?(method_name, include_private = false)
-        if args.empty? && input_hash? && (input_method_name = input[method_name])
-          input_method_name
-        else
-          inputs[method_name] || super
-        end
+        from_input?(method_name) || from_inputs?(method_name) || super
       end
 
       protected
@@ -134,6 +132,20 @@ module OnStrum
       end
 
       private
+
+      def method_s_sym(method_name)
+        [method_name.to_s, method_name.to_sym]
+      end
+
+      def from_input?(method_name)
+        method_key, method_sym = method_s_sym(method_name)
+        args.empty? && input_hash? && (input.key?(method_key) || input.key?(method_sym))
+      end
+
+      def from_inputs?(method_name)
+        method_key, method_sym = method_s_sym(method_name)
+        inputs.key?(method_key) || inputs.key?(method_sym)
+      end
 
       def input_hash?
         input.is_a?(::Hash)
