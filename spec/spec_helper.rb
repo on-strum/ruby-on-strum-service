@@ -3,7 +3,7 @@
 rspec_custom = ::File.join(::File.dirname(__FILE__), 'support/**/*.rb')
 ::Dir[::File.expand_path(rspec_custom)].sort.each { |file| require file unless file[/\A.+_spec\.rb\z/] }
 
-require_relative '../lib/ruby_gem_name'
+require_relative '../lib/on_strum'
 
 RSpec.configure do |config|
   config.expect_with(:rspec) do |expectations|
@@ -18,6 +18,8 @@ RSpec.configure do |config|
   config.example_status_persistence_file_path = '.rspec_status'
   config.disable_monkey_patching!
   config.order = :random
+
+  config.include ContextGeneratorHelper
 
   ::Kernel.srand(config.seed)
 end

@@ -7,13 +7,16 @@ require:
 AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
   SuggestExtensions: false
   NewCops: enable
 
 # Metrics ---------------------------------------------------------------------
 
 Metrics/ClassLength:
+  Max: 150
+
+Metrics/ModuleLength:
   Max: 150
 
 Metrics/MethodLength:
@@ -56,6 +59,9 @@ Style/ParallelAssignment:
 Style/RescueStandardError:
   Enabled: false
 
+Style/RedundantConstantBase:
+  Enabled: false
+
 # Layout ----------------------------------------------------------------------
 
 Layout/LineLength:
@@ -83,6 +89,9 @@ Layout/EmptyLineAfterGuardClause:
 # Gemspec ---------------------------------------------------------------------
 
 Gemspec/RequireMFA:
+  Enabled: false
+
+Gemspec/DevelopmentDependencies:
   Enabled: false
 
 # Performance -----------------------------------------------------------------
