@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'service/core'
+
 module OnStrum
   module Service
     def self.included(base)

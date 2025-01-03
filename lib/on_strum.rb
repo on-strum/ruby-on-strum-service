@@ -2,6 +2,6 @@
 
 module OnStrum
   module Service
-    require_relative 'on_strum/service/core'
+    require_relative 'on_strum/service'
   end
 end
