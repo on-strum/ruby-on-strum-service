@@ -75,6 +75,8 @@ module OnStrum
         inputs_snapshot[OnStrum::Service::InstanceMethods::DEFAULT_CTX_KEY]
       end
 
+      def audit; end
+
       def args
         inputs.slice(*inputs.keys - [OnStrum::Service::InstanceMethods::DEFAULT_CTX_KEY])
       end

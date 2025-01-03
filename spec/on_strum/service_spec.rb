@@ -578,4 +578,22 @@ RSpec.describe OnStrum::Service do
       end
     end
   end
+
+  describe 'warning about Strum::Service' do
+    context 'when Strum::Service is defined' do
+      before { stub_const('Strum::Service', 42) }
+
+      it 'warns about migration possibility' do
+        expect { ::Class.new { include OnStrum::Service } } # rubocop:disable RSpec/DescribedClass
+          .to output(OnStrum::Service::WARNING).to_stderr
+      end
+    end
+
+    context 'when Strum::Service is not defined' do
+      it 'does not show any warning' do
+        expect { ::Class.new { include OnStrum::Service } } # rubocop:disable RSpec/DescribedClass
+          .not_to output.to_stderr
+      end
+    end
+  end
 end
