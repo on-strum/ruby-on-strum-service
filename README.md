@@ -70,21 +70,12 @@ gem install on_strum-service
 ```ruby
 require 'on_strum/service'
 
-# Recommended approach - inheritance
-class MyService < OnStrum::Service
-  def call
-    # Your service logic here
-    output(result) # Use output to return successful result
-  end
-end
-
-# Alternative approach using include (not recommended)
-class AnotherService
+class MyService
   include OnStrum::Service
 
   def call
     # Your service logic here
-    output(result)
+    output(result) # Use output to return successful result
   end
 end
 
@@ -95,13 +86,12 @@ MyService.call(input_hash) do |result|
 end
 ```
 
-> [!IMPORTANT]  
-> While it's possible to use the service module through inclusion (`include OnStrum::Service`), we strongly recommend using inheritance (`< OnStrum::Service`) for better code clarity and maintainability. This approach provides a clearer indication of the service object pattern implementation and makes the code more explicit.
-
 ### Error Handling
 
 ```ruby
-class ValidationService < OnStrum::Service
+class ValidationService
+  include OnStrum::Service
+  
   def call
     # Add single error
     add_error(:email, :invalid)
@@ -123,7 +113,9 @@ end
 ### Required Fields Validation
 
 ```ruby
-class UserService < OnStrum::Service
+class UserService
+  include OnStrum::Service
+
   def call
     # Validate required fields
     required!(:email)    # Will exit immediately if email is missing
@@ -143,7 +135,9 @@ end
 ### Hooks
 
 ```ruby
-class ProcessingService < OnStrum::Service
+class ProcessingService
+  include OnStrum::Service
+
   def call
     # Trigger hooks during processing
     hook(:processing_started)
@@ -164,7 +158,9 @@ end
 ### Helper Methods
 
 ```ruby
-class DataService < OnStrum::Service
+class DataService
+  include OnStrum::Service
+
   def call
     # Slice specific keys from input
     sliced(:name, :email)  # Reduces input to only these keys
@@ -178,7 +174,9 @@ class DataService < OnStrum::Service
 end
 
 # Example of error handling with sliced_list
-class ArrayProcessor < OnStrum::Service
+class ArrayProcessor
+  include OnStrum::Service
+
   def call
     # This will fail if input is not an array
     sliced_list(:name, :email)
@@ -220,7 +218,9 @@ end
 The service automatically handles method missing to allow direct access to both input hash values and keyword arguments:
 
 ```ruby
-class GreetingService < OnStrum::Service
+class GreetingService
+  include OnStrum::Service
+
   def call
     # 'name' will be looked up from:
     # 1. Input hash (if it's a Hash)
@@ -256,7 +256,9 @@ The method missing implementation provides a flexible way to access input parame
 The service provides flexible output handling through the `output` method:
 
 ```ruby
-class UserService < OnStrum::Service
+class UserService
+  include OnStrum::Service
+
   def call
     # Basic usage - single output
     output(user)  # Same as output(:default, user)
