@@ -5,7 +5,7 @@ require_relative 'lib/on_strum/service/version'
 Gem::Specification.new do |spec|
   spec.name        = 'on_strum-service'
   spec.version     = OnStrum::Service::VERSION
-  spec.authors     = ['Serhiy Nazarov']
+  spec.authors     = ['Serhiy Nazarov', 'Vladislav Trotsenko']
   spec.email       = %w[admin@on-strum.org]
 
   spec.summary     = %(on_strum-service)
@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
     'bug_tracker_uri'   => 'https://github.com/on-strum/ruby-on-strum-service/issues'
   }
 
-  spec.required_ruby_version = '>= 2.5.0'
+  spec.required_ruby_version = '>= 2.7.0'
   spec.files = `git ls-files -z`.split("\x0").select { |f| f.match(%r{^(bin|lib)/|.ruby-version|on_strum-service.gemspec|LICENSE}) }
   spec.require_paths = %w[lib]
 
