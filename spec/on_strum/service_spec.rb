@@ -451,7 +451,7 @@ RSpec.describe OnStrum::Service do
       end
 
       context 'when methods from service object context, includes string key' do
-        it 'returns sstring-key value' do
+        it 'returns string-key value' do
           service_class.call({ 'method_name' => 42 }) do |monad|
             monad.success { |result| expect(result).to eq(42) }
           end
@@ -459,8 +459,14 @@ RSpec.describe OnStrum::Service do
       end
 
       context 'when methods from service object args, includes string and symbol same keys' do
+        let(:kwargs) { { 'method_name' => 42, method_name: 100 } }
+
         it 'returns symbol-key value' do
-          service_class.call({}, 'method_name' => 42, method_name: 100) do |monad|
+          service_class.call({}, **kwargs) do |monad|
+            monad.success { |result| expect(result).to eq(100) }
+          end
+
+          service_class.call(**kwargs) do |monad|
             monad.success { |result| expect(result).to eq(100) }
           end
         end

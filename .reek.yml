@@ -14,6 +14,7 @@ detectors:
   FeatureEnvy:
     exclude:
       - OnStrum::Service::InstanceMethods#default_pro
+      - OnStrum::Service::ClassMethods#call
 
   TooManyStatements:
     exclude:
