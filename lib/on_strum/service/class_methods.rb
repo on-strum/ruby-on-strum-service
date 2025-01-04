@@ -3,8 +3,11 @@
 module OnStrum
   module Service
     module ClassMethods
-      def call(ctx, **args, &block)
-        new(ctx, **args).execute(&block)
+      def call(*args, **kwargs, &block)
+        # For Ruby 2.7: call({key: 'value'}) -> args=[], kwargs={key: 'value'}
+        # For Ruby 3.0: call({key: 'value'}) -> args=[{key: 'value'}], kwargs={}
+        ctx = ::RUBY_VERSION < '3.0' && args.empty? ? kwargs : args.first
+        new(ctx || {}, **kwargs).execute(&block)
       end
     end
   end
