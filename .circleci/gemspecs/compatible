@@ -5,7 +5,7 @@ require_relative 'lib/on_strum/service/version'
 Gem::Specification.new do |spec|
   spec.name          = 'on_strum-service'
   spec.version       = OnStrum::Service::VERSION
-  spec.authors       = ['Serhiy Nazarov']
+  spec.authors       = ['Serhiy Nazarov', 'Vladislav Trotsenko']
   spec.email         = %w[admin@on-strum.org]
   spec.summary       = %(on_strum-service)
   spec.description   = %(Abstract class for service object scaffolding)
