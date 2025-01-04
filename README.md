@@ -79,12 +79,125 @@ class MyService
   end
 end
 
-# Call the service
-MyService.call(input_hash) do |result|
-  result.success { |value| puts "Success: #{value}" }
-  result.failure { |errors| puts "Errors: #{errors}" }
+# Call with context hash
+MyService.call(input_hash) do |monad|
+  monad.success { |result| puts "Success: #{result}" }
+  monad.failure { |errors| puts "Errors: #{errors}" }
+end
+
+# Call with only keyword arguments
+MyService.call(name: 'John', age: 42) do |monad|
+  monad.success { |result| puts "Success: #{result}" }
+  monad.failure { |errors| puts "Errors: #{errors}" }
+end
+
+# Call with both context and keyword arguments
+MyService.call(input_hash, name: 'John', age: 42) do |monad|
+  monad.success { |result| puts "Success: #{result}" }
+  monad.failure { |errors| puts "Errors: #{errors}" }
 end
 ```
+
+### Service Context and Arguments
+
+  The service object follows a clear separation between context and service-object configuration through its calling convention:
+
+```ruby
+MyService.call(context, **config) # Please note that the context is optional and defaults to an empty hash
+```
+
+#### Context (First Argument)
+
+The context represents the data being processed or transformed:
+
+- Optional hash that defaults to an empty hash `{}`
+- Contains the primary data that the service-object will work with
+- Represents the "what" of the service-object operation
+- Immutable snapshot of input data
+
+```ruby
+class DocumentProcessor
+  include OnStrum::Service
+  
+  def call
+    # Working with the main data context
+    validate_metadata(metadata)
+    process_content(content)
+  end
+end
+
+# Processing a document with its data
+DocumentProcessor.call({
+  content: 'Some text content',
+  metadata: { author: 'John', date: '2024-03-20' }
+})
+
+# Or with no context when not needed
+DocumentProcessor.call # Uses default empty hash
+```
+
+#### Service-object Configuration (Keyword Arguments)
+
+The keyword arguments represent service-object configuration and behavior modifiers:
+
+- Optional parameters that control how the service-object operates
+- Represents the "how" of the service-object operation
+- Can override context values available as methods
+- Used for service-object-specific options and flags
+
+```ruby
+class DocumentProcessor
+  include OnStrum::Service
+  
+  def call
+    return if skip_processing
+    
+    process_content(
+      content,
+      format: output_format,    # from config
+      compress: compress_output # from config
+    )
+  end
+end
+
+# Configuring the processing behavior
+DocumentProcessor.call(
+  { content: 'Raw content' },           # Context: What to process
+  output_format: :pdf,                  # Config: How to process
+  compress_output: true,
+  skip_processing: false
+)
+```
+
+This separation provides several benefits:
+
+- Clear distinction between data and configuration
+- Easier testing by separating data concerns from behavioral configuration
+- More flexible service reuse with different configurations
+- Better code organization and readability
+
+When the same key exists in both context and configuration:
+
+- Configuration (keyword arguments) takes precedence
+- This allows for easy overrides without modifying the original context
+- The original context remains available via `input_snapshot`
+
+```ruby
+service = DocumentProcessor.call(
+  { format: 'html' },          # Context format
+  format: 'pdf'                # Config format - takes precedence
+)
+# Inside service:
+# format => 'pdf'
+# input_snapshot[:format] => 'html'
+```
+
+This design encourages:
+
+- Clean separation of concerns
+- Immutable input data
+- Flexible configuration
+- Clear intent in service calls
 
 ### Error Handling
 
@@ -103,8 +216,8 @@ class ValidationService
     # Add multiple errors at once
     # You can use bang (!) methods to immediately exit the service with errors
     add_errors!(
-      email: [:invalid, :taken],
-      password: [:too_short]
+      email: %i[invalid taken],
+      password: %i[too_short no_special_chars]
     )
   end
 end
@@ -124,10 +237,11 @@ class UserService
     # Your logic here
   end
 
-  # You can also use audit method for validations
+  # Also you can use audit method for prevalidations
   def audit
     required(:email)
     required(:password)
+    # something else...
   end
 end
 ```
@@ -148,10 +262,10 @@ class ProcessingService
 end
 
 # Handle hooks in the caller
-ProcessingService.call(data) do |result|
-  result.on(:processing_started) { puts 'Started!' }
-  result.on(:processing_completed) { |data| puts "Completed with: #{data}" }
-  result.success { |value| puts "Final result: #{value}" }
+ProcessingService.call(data) do |monad|
+  monad.on(:processing_started) { puts 'Started!' }
+  monad.on(:processing_completed) { |data| puts "Completed with: #{data}" }
+  monad.success { |value| puts "Final result: #{value}" }
 end
 ```
 
@@ -185,15 +299,15 @@ class ArrayProcessor
 end
 
 # This will fail because input is not an array
-ArrayProcessor.call({ some: 'hash' }) do |result|
-  result.failure do |errors|
+ArrayProcessor.call({ some: 'hash' }) do |monad|
+  monad.failure do |errors|
     errors # => { input: [:must_be_array] }
   end
 end
 
 # This will fail because one of items is not a hash
-ArrayProcessor.call([{ name: 'John' }, 'not a hash']) do |result|
-  result.failure do |errors|
+ArrayProcessor.call([{ name: 'John' }, 'not a hash']) do |monad|
+  monad.failure do |errors|
     errors # => { input_subitem: [:must_be_hash] }
   end
 end
@@ -202,8 +316,8 @@ end
 ArrayProcessor.call([
   { name: 'John', email: 'john@example.com', age: 30 },
   { name: 'Jane', email: 'jane@example.com', phone: '123' }
-]) do |result|
-  result.success do |processed_array|
+]) do |monad|
+  monad.success do |processed_array|
     processed_array # => [
       # Only name and email keys are preserved
       { name: 'John', email: 'john@example.com' },
@@ -230,18 +344,20 @@ class GreetingService
   end
 end
 
-# Using input hash
+# Using input hash (context)
 GreetingService.call({ name: 'John' })
 
-# Using keyword arguments
+# Using keyword arguments (config)
 GreetingService.call({}, name: 'John')
 
 # Mixed usage (keyword args take precedence)
 GreetingService.call({ name: 'John' }, name: 'Jane')  # Will use 'Jane'
 
 # Supports both string and symbol keys
-GreetingService.call({ 'name' => 'John' })  # Works
-GreetingService.call({ :name => 'John' })   # Works too
+GreetingService.call({ 'name' => 'John' })  # Works, passing context as hash with string key
+GreetingService.call('name' => 'John')      # Works, passing keyword arguments with string key
+GreetingService.call({ name: 'John' })      # Works, passing context as hash with symbol key
+GreetingService.call(name: 'John')          # Works, passing keyword arguments with symbol key
 ```
 
 The method missing implementation provides a flexible way to access input parameters:
@@ -268,7 +384,7 @@ class UserService
     output(:stats, stats)
 
     # Last output is returned by default
-    output(:final_result, "Done!")
+    output(:final_result, 'Done!')
   end
 end
 
