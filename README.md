@@ -199,6 +199,123 @@ This design encourages:
 - Flexible configuration
 - Clear intent in service calls
 
+### Output Handling
+
+The service object provides sophisticated handling of both success and failure cases with support for named handlers.
+
+The output system features:
+
+- Default output using single argument: `output(value)`
+- Named outputs using key-value pairs: `output(:key, value)`
+- Multiple outputs can be set during service execution
+- Specific outputs can be handled with corresponding success handlers
+- The last output (or default output) is returned if no specific handler matches
+
+```ruby
+class UserService
+  include OnStrum::Service
+
+  def call
+    # Case 1: Default success output
+    output('Default result')  # or output(:default, 'Default result')
+
+    # Case 2: Named success output
+    output(:user, { id: 1, name: 'John' })
+    
+    # Case 3: Multiple named outputs
+    output(:stats, { count: 42 })
+    output(:status, 'completed')
+
+    # Error cases
+    add_error(:validation, :invalid_format)  # Will trigger failure(:validation) handler
+    add_error(:auth, :unauthorized)          # Will trigger failure(:auth) handler
+  end
+end
+
+# Handling different success and failure scenarios
+UserService.call(data) do |monad|
+  # Success handlers
+  monad.success { |result| puts "Default handler: #{result}" }
+  monad.success(:user) { |user| puts "User handler: #{user}" }
+  monad.success(:stats) { |stats| puts "Stats handler: #{stats}" }
+
+  # Failure handlers
+  monad.failure { |errors| puts "Default error handler: #{errors}" }
+  monad.failure(:validation) { |errors| puts "Validation errors: #{errors}" }
+  monad.failure(:auth) { |errors| puts "Auth errors: #{errors}" }
+end
+```
+
+#### Success Handler Resolution
+
+Success handlers are resolved in the following order:
+
+1. Looks for a handler matching the output key (`output(:key, value)`)
+2. Falls back to the default handler (defined without a key) if no specific handler is found
+3. Returns the raw output value if no handlers are defined
+
+```ruby
+service.call do |monad|
+  # These can be defined in any order
+  monad.success(:specific) { |value| puts "Specific: #{value}" }
+  monad.success { |value| puts "Default: #{value}" }
+end
+```
+
+#### Failure Handler Resolution
+
+Failure handlers are resolved based on error keys:
+
+1. Looks for a handler matching the error key (`add_error(:key, :error)`)
+2. Falls back to the default handler if no specific handler matches
+3. Returns the raw errors hash if no handlers are defined
+
+```ruby
+service.call do |monad|
+  # These can be defined in any order
+  monad.failure(:not_found) { |errors| puts "Not found: #{errors}" }
+  monad.failure(:validation) { |errors| puts "Validation: #{errors}" }
+  monad.failure { |errors| puts "Default error: #{errors}" }
+end
+```
+
+#### Multiple Outputs
+
+You can set multiple outputs during service execution:
+
+```ruby
+class ProcessingService
+  include OnStrum::Service
+
+  def call
+    # Set multiple outputs
+    output(:step1, "First step done")
+    output(:step2, "Second step done")
+    output(:final, "All completed")
+
+    # The last output becomes the default result
+    # unless a specific handler is matched
+  end
+end
+
+ProcessingService.call do |monad|
+  monad.success(:step1) { |result| puts "Step 1: #{result}" }
+  monad.success(:step2) { |result| puts "Step 2: #{result}" }
+  monad.success(:final) { |result| puts "Final: #{result}" }
+  monad.success { |result| puts "Default: #{result}" } # Gets :final result
+end
+```
+
+#### Handler Order Independence
+
+The order in which you define success and failure handlers doesn't matter:
+
+- For success: The handler matching the output key will be called
+- For failures: The handler matching the error key will be called
+- Default handlers (without keys) serve as fallbacks
+
+This allows for flexible and maintainable code organization while handling complex service results.
+
 ### Error Handling
 
 ```ruby
@@ -366,49 +483,6 @@ The method missing implementation provides a flexible way to access input parame
 - Looks up values in both the input hash and keyword arguments
 - Uses a default proc to handle string/symbol key interchangeability
 - Returns `nil` for non-existent keys instead of raising method missing errors
-
-### Output Handling
-
-The service provides flexible output handling through the `output` method:
-
-```ruby
-class UserService
-  include OnStrum::Service
-
-  def call
-    # Basic usage - single output
-    output(user)  # Same as output(:default, user)
-
-    # Named outputs
-    output(:user, user)
-    output(:stats, stats)
-
-    # Last output is returned by default
-    output(:final_result, 'Done!')
-  end
-end
-
-# Handle different outputs in the caller
-UserService.call(data) do |result|
-  # Handle default output
-  result.success { |value| puts "Default: #{value}" }
-
-  # Handle specific named output
-  result.success(:user) { |user| puts "User: #{user}" }
-  result.success(:stats) { |stats| puts "Stats: #{stats}" }
-
-  # Handle failures
-  result.failure { |errors| puts "Errors: #{errors}" }
-end
-```
-
-The output system features:
-
-- Default output using single argument: `output(value)`
-- Named outputs using key-value pairs: `output(:key, value)`
-- Multiple outputs can be set during service execution
-- Specific outputs can be handled with corresponding success handlers
-- The last output (or default output) is returned if no specific handler matches
 
 ## Contributing
 
